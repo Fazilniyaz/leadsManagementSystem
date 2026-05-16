@@ -5,12 +5,28 @@ interface TokenPayload {
   role: string;
 }
 
-export const generateToken = (payload: TokenPayload): string => {
-  return jwt.sign(payload, process.env.JWT_SECRET as string, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+export const generateAccessToken = (payload: TokenPayload): string => {
+  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, {
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m',
   } as jwt.SignOptions);
 };
 
-export const verifyToken = (token: string): TokenPayload => {
-  return jwt.verify(token, process.env.JWT_SECRET as string) as TokenPayload;
+export const generateRefreshToken = (payload: TokenPayload): string => {
+  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET as string, {
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
+  } as jwt.SignOptions);
+};
+
+export const verifyAccessToken = (token: string): TokenPayload => {
+  return jwt.verify(
+    token,
+    process.env.ACCESS_TOKEN_SECRET as string
+  ) as TokenPayload;
+};
+
+export const verifyRefreshToken = (token: string): TokenPayload => {
+  return jwt.verify(
+    token,
+    process.env.REFRESH_TOKEN_SECRET as string
+  ) as TokenPayload;
 };

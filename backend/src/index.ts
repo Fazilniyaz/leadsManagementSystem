@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import leadRoutes from './routes/lead.routes';
 import userRoutes from './routes/user.routes';
+import cookieParser from 'cookie-parser';
+
 
 dotenv.config();
 
@@ -14,7 +16,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 
 // Routes

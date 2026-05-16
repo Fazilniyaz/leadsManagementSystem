@@ -1,15 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import { User } from '../models/user.model';
-import { generateToken } from '../helpers/jwt.helper';
-import { UserRole } from '../models/user.model';
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-  };
-}
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from '../helpers/jwt.helper';
+import { setTokenCookies, clearTokenCookies } from '../helpers/cookie.helper';
 
 export const register = async (
   req: Request,
@@ -33,13 +30,21 @@ export const register = async (
 
     const user = await User.create({ name, email, password, role });
 
-    const token = generateToken({ id: user._id.toString(), role: user.role });
+    // const accessToken = generateAccessToken({
+    //   id: user._id.toString(),
+    //   role: user.role,
+    // });
+    // const refreshToken = generateRefreshToken({
+    //   id: user._id.toString(),
+    //   role: user.role,
+    // });
+
+    // setTokenCookies(res, accessToken, refreshToken);
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
-        token,
         user: {
           id: user._id,
           name: user.name,
@@ -78,13 +83,21 @@ export const login = async (
       return;
     }
 
-    const token = generateToken({ id: user._id.toString(), role: user.role });
+    const accessToken = generateAccessToken({
+      id: user._id.toString(),
+      role: user.role,
+    });
+    const refreshToken = generateRefreshToken({
+      id: user._id.toString(),
+      role: user.role,
+    });
+
+    setTokenCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
       data: {
-        token,
         user: {
           id: user._id,
           name: user.name,
@@ -98,8 +111,65 @@ export const login = async (
   }
 };
 
+export const refresh = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const token = req.cookies?.refreshToken;
+
+    if (!token) {
+      res.status(401).json({ success: false, message: 'No refresh token' });
+      return;
+    }
+
+    const decoded = verifyRefreshToken(token);
+
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isActive) {
+      res.status(401).json({ success: false, message: 'Invalid refresh token' });
+      return;
+    }
+
+    const newAccessToken = generateAccessToken({
+      id: user._id.toString(),
+      role: user.role,
+    });
+    const newRefreshToken = generateRefreshToken({
+      id: user._id.toString(),
+      role: user.role,
+    });
+
+    setTokenCookies(res, newAccessToken, newRefreshToken);
+
+    res.status(200).json({
+      success: true,
+      message: 'Token refreshed',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
+    });
+  } catch {
+    res.status(401).json({ success: false, message: 'Invalid refresh token' });
+  }
+};
+
+export const logout = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  clearTokenCookies(res);
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
 export const getMe = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
