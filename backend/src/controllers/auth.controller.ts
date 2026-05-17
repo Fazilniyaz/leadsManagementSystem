@@ -184,3 +184,21 @@ export const getMe = async (
     next(error);
   }
 };
+
+export const updateMe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { name, email } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user?.id,
+      { name, email },
+      { new: true, runValidators: true }
+    );
+    res.status(200).json({ success: true, data: { user } });
+  } catch (error) {
+    next(error);
+  }
+};
