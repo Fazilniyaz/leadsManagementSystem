@@ -1,9 +1,24 @@
 import axios from 'axios';
 
+let inMemoryToken: string | null = null
+
+export const setToken = (token: string) => { inMemoryToken = token }
+export const clearToken = () => { inMemoryToken = null }
+export const getToken = () => inMemoryToken
+
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
-});
+})
+
+// Request interceptor — token attach
+axiosInstance.interceptors.request.use((config) => {
+  const token = getToken()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 let isRefreshing = false;
 let failedQueue: Array<{

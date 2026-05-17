@@ -7,13 +7,13 @@ export interface User {
 }
 
 export interface AuthResponse {
-  success: boolean;
-  message: string;
+  success: boolean
+  message: string
   data?: {
-    user: User;
-  };
+    accessToken?: string // ← add
+    user: User
+  }
 }
-
 export interface Lead {
   _id: string;
   name: string;

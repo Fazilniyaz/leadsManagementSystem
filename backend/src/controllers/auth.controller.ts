@@ -97,6 +97,7 @@ export const login = async (
     res.status(200).json({
       success: true,
       message: 'Login successful',
+      accessToken, 
       data: {
         user: {
           id: user._id,
@@ -168,22 +169,28 @@ export const logout = async (
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
-export const getMe = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user?.id);
+    const user = await User.findById(req.user?.id)
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
-      return;
+      res.status(404).json({ success: false, message: 'User not found' })
+      return
     }
-    res.status(200).json({ success: true, data: { user } });
+    
+    // Fresh access token குடு
+    const accessToken = generateAccessToken({
+      id: user._id.toString(),
+      role: user.role,
+    })
+    
+    res.status(200).json({ 
+      success: true, 
+      data: { accessToken, user } 
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 export const updateMe = async (
   req: Request,

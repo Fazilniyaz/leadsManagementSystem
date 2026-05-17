@@ -8,19 +8,22 @@ export const protect = (
   next: NextFunction
 ): void => {
   try {
-    // Cookie-லிருந்து எடு
-    const token = req.cookies?.accessToken;
+    // Bearer token first, then cookie
+    const authHeader = req.headers.authorization
+    let token = authHeader?.startsWith('Bearer ')
+      ? authHeader.split(' ')[1]
+      : req.cookies?.accessToken
 
     if (!token) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+      res.status(401).json({ success: false, message: 'Unauthorized' })
+      return
     }
 
-    const decoded = verifyAccessToken(token);
-    req.user = { id: decoded.id, role: decoded.role as UserRole };
-    next();
+    const decoded = verifyAccessToken(token)
+    req.user = { id: decoded.id, role: decoded.role as UserRole }
+    next()
   } catch {
-    res.status(401).json({ success: false, message: 'Invalid token' });
+    res.status(401).json({ success: false, message: 'Invalid token' })
   }
 };
 
