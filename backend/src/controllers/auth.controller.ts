@@ -126,36 +126,36 @@ export const refresh = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken
 
     if (!token) {
-      res.status(401).json({ success: false, message: 'No refresh token' });
-      return;
+      res.status(401).json({ success: false, message: 'No refresh token' })
+      return
     }
 
-    const decoded = verifyRefreshToken(token);
+    const decoded = verifyRefreshToken(token)
+    const user = await User.findById(decoded.id)
 
-    const user = await User.findById(decoded.id);
     if (!user || !user.isActive) {
-      res.status(401).json({ success: false, message: 'Invalid refresh token' });
-      return;
+      res.status(401).json({ success: false, message: 'Invalid refresh token' })
+      return
     }
 
     const newAccessToken = generateAccessToken({
       id: user._id.toString(),
       role: user.role,
-    });
+    })
     const newRefreshToken = generateRefreshToken({
       id: user._id.toString(),
       role: user.role,
-    });
+    })
 
-    setTokenCookies(res, newAccessToken, newRefreshToken);
+    setTokenCookies(res, newAccessToken, newRefreshToken)
 
     res.status(200).json({
       success: true,
-      message: 'Token refreshed',
       data: {
+        accessToken: newAccessToken, // ← Add பண்ணு
         user: {
           id: user._id,
           name: user.name,
@@ -163,9 +163,9 @@ export const refresh = async (
           role: user.role,
         },
       },
-    });
+    })
   } catch {
-    res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    res.status(401).json({ success: false, message: 'Invalid refresh token' })
   }
 };
 

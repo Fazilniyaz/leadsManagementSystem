@@ -12,12 +12,21 @@ export const useCurrentUser = () => {
   return useQuery<User>({
     queryKey: ['currentUser'],
     queryFn: async () => {
-      const res = await axiosInstance.get('/auth/me')
-      // Refresh token-லிருந்து new access token வந்தா set பண்ணு
-      if (res.data.data?.accessToken) {
-        setToken(res.data.data.accessToken)
+      try {
+        // First try /auth/me with existing token
+        const res = await axiosInstance.get('/auth/me')
+        if (res.data.data?.accessToken) {
+          setToken(res.data.data.accessToken)
+        }
+        return res.data.data.user
+      } catch {
+        // Token expired → try refresh
+        const refresh = await axiosInstance.post('/auth/refresh')
+        if (refresh.data.data?.accessToken) {
+          setToken(refresh.data.data.accessToken)
+        }
+        return refresh.data.data.user
       }
-      return res.data.data.user
     },
     staleTime: Infinity,
     retry: false,
