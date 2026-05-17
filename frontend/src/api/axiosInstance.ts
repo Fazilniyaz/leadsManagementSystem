@@ -80,15 +80,18 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await axiosInstance.post('/auth/refresh');
-        processQueue(null);
-        return axiosInstance(originalRequest);
+        const refreshRes = await axiosInstance.post('/auth/refresh')
+        if (refreshRes.data?.data?.accessToken) {
+          setToken(refreshRes.data.data.accessToken)
+        }
+        processQueue(null)
+        return axiosInstance(originalRequest)
       } catch (refreshError) {
-        processQueue(refreshError);
-        redirectToLogin();
-        return Promise.reject(refreshError);
+        processQueue(refreshError)
+        redirectToLogin()
+        return Promise.reject(refreshError)
       } finally {
-        isRefreshing = false;
+        isRefreshing = false
       }
     }
 

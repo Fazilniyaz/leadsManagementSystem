@@ -23,7 +23,15 @@ export default function Register() {
   }, [])
 
   const handleSubmit = (data: any) => {
-    register({ ...data, role: 'sales' })
+    register(data)
+  }
+
+  const pwd = methods.watch('password') ?? ''
+  const pwdChecks = {
+    length: pwd.length >= 8,
+    upper: /[A-Z]/.test(pwd),
+    lower: /[a-z]/.test(pwd),
+    symbol: /[^A-Za-z0-9]/.test(pwd),
   }
 
   const errMsg = isError
@@ -157,7 +165,17 @@ export default function Register() {
 
           <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <FormInput name="name" label="Full name" type="text" placeholder="Your full name" rules={{ required: 'Name required', minLength: { value: 2, message: 'Min 2 chars' } }} />
+              <FormInput
+                name="name"
+                label="Full name"
+                type="text"
+                placeholder="Your full name"
+                rules={{
+                  required: 'Name required',
+                  minLength: { value: 2, message: 'Min 2 characters' },
+                  pattern: { value: /^[A-Za-z\s'-]+$/, message: 'Name can only contain letters, spaces, hyphens, or apostrophes' },
+                }}
+              />
 
               <FormInput name="email" label="Email address" type="email" placeholder="you@company.com" rules={{ required: 'Email required' }} />
 
@@ -168,7 +186,35 @@ export default function Register() {
                     {showPass ? 'Hide' : 'Show'}
                   </button>
                 </div>
-                <FormInput name="password" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters" rules={{ required: 'Password required', minLength: { value: 6, message: 'Min 6 chars' } }} />
+                <FormInput
+                name="password"
+                type={showPass ? 'text' : 'password'}
+                placeholder="Min. 8 chars, A-Z, a-z, symbol"
+                rules={{
+                  required: 'Password required',
+                  minLength: { value: 8, message: 'Min 8 characters' },
+                  validate: {
+                    upper: (v: string) => /[A-Z]/.test(v) || 'Must include an uppercase letter',
+                    lower: (v: string) => /[a-z]/.test(v) || 'Must include a lowercase letter',
+                    symbol: (v: string) => /[^A-Za-z0-9]/.test(v) || 'Must include a symbol (e.g. @, !, #)',
+                  },
+                }}
+              />
+              {/* Password strength checklist */}
+              {pwd.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {([
+                    [pwdChecks.length, '8+ characters'],
+                    [pwdChecks.upper,  'One uppercase letter'],
+                    [pwdChecks.lower,  'One lowercase letter'],
+                    [pwdChecks.symbol, 'One symbol (@, !, # …)'],
+                  ] as [boolean, string][]).map(([ok, label]) => (
+                    <span key={label} style={{ fontSize: 11, color: ok ? '#4ade80' : '#555', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontSize: 10 }}>{ok ? '✓' : '○'}</span>{label}
+                    </span>
+                  ))}
+                </div>
+              )}
               </div>
 
               <button className="btn-submit" type="submit" disabled={isPending}>

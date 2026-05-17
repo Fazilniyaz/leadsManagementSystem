@@ -155,7 +155,7 @@ export default function Login() {
                     {showPass ? 'Hide' : 'Show'}
                   </button>
                 </div>
-                <FormInput name="password" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters" rules={{ required: 'Password required', minLength: { value: 6, message: 'Min 6 chars' } }} />
+                <FormInput name="password" type={showPass ? 'text' : 'password'} placeholder="Your password" rules={{ required: 'Password required' }} />
               </div>
 
               <button className="btn-submit" type="submit" disabled={isPending}>
