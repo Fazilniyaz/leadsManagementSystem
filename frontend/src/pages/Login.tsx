@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useLogin } from '../hooks/useAuth'
+import { useForm, FormProvider } from 'react-hook-form'
+import FormInput from '../components/FormInput'
 
 export default function Login() {
   const { mutate: login, isPending, error, isError } = useLogin()
-  const [form, setForm] = useState({ email: '', password: '' })
   const [showPass, setShowPass] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+  const methods = useForm({ defaultValues: { email: '', password: '' } })
 
   useEffect(() => {
     const el = cardRef.current
@@ -20,9 +22,8 @@ export default function Login() {
     })
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    login(form)
+  const handleSubmit = (data: any) => {
+    login(data)
   }
 
   const errMsg = isError
@@ -143,46 +144,25 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 8, letterSpacing: '0.02em' }}>
-                Email address
-              </label>
-              <input
-                className="field"
-                type="email"
-                placeholder="you@company.com"
-                value={form.email}
-                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                required
-                autoComplete="email"
-              />
-            </div>
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <FormInput name="email" label="Email address" type="email" placeholder="you@company.com" rules={{ required: 'Email required' }} />
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <label style={{ fontSize: 13, fontWeight: 500, color: '#888', letterSpacing: '0.02em' }}>
-                  Password
-                </label>
-                <button type="button" className="show-btn" onClick={() => setShowPass(p => !p)}>
-                  {showPass ? 'Hide' : 'Show'}
-                </button>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: '#888' }}>Password</label>
+                  <button type="button" className="show-btn" onClick={() => setShowPass(p => !p)}>
+                    {showPass ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <FormInput name="password" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters" rules={{ required: 'Password required', minLength: { value: 6, message: 'Min 6 chars' } }} />
               </div>
-              <input
-                className="field"
-                type={showPass ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={form.password}
-                onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                required
-                autoComplete="current-password"
-              />
-            </div>
 
-            <button className="btn-submit" type="submit" disabled={isPending}>
-              {isPending ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
+              <button className="btn-submit" type="submit" disabled={isPending}>
+                {isPending ? 'Signing in...' : 'Sign in'}
+              </button>
+            </form>
+          </FormProvider>
 
           <p style={{ marginTop: 28, fontSize: 14, color: '#444', textAlign: 'center' }}>
             Don't have an account?{' '}

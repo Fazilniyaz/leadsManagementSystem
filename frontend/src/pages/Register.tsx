@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useRegister } from '../hooks/useAuth'
+import { useForm, FormProvider } from 'react-hook-form'
+import FormInput from '../components/FormInput'
 
 export default function Register() {
   const { mutate: register, isPending, error, isError } = useRegister()
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'sales' })
+  const methods = useForm({ defaultValues: { name: '', email: '', password: '', role: 'sales' } })
   const [showPass, setShowPass] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -20,9 +22,8 @@ export default function Register() {
     })
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    register(form)
+  const handleSubmit = (data: any) => {
+    register(data)
   }
 
   const errMsg = isError
@@ -179,76 +180,45 @@ export default function Register() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 8 }}>
-                Full name
-              </label>
-              <input
-                className="field"
-                type="text"
-                placeholder="Your full name"
-                value={form.name}
-                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                required
-                minLength={2}
-              />
-            </div>
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <FormInput name="name" label="Full name" type="text" placeholder="Your full name" rules={{ required: 'Name required', minLength: { value: 2, message: 'Min 2 chars' } }} />
 
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 8 }}>
-                Email address
-              </label>
-              <input
-                className="field"
-                type="email"
-                placeholder="you@company.com"
-                value={form.email}
-                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                required
-              />
-            </div>
+              <FormInput name="email" label="Email address" type="email" placeholder="you@company.com" rules={{ required: 'Email required' }} />
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <label style={{ fontSize: 13, fontWeight: 500, color: '#888' }}>Password</label>
-                <button type="button" className="show-btn" onClick={() => setShowPass(p => !p)}>
-                  {showPass ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              <input
-                className="field"
-                type={showPass ? 'text' : 'password'}
-                placeholder="Min. 6 characters"
-                value={form.password}
-                onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                required
-                minLength={6}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 10 }}>
-                Role
-              </label>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {(['sales', 'admin'] as const).map(r => (
-                  <button
-                    key={r}
-                    type="button"
-                    className={`role-btn ${form.role === r ? 'active' : 'inactive'}`}
-                    onClick={() => setForm(p => ({ ...p, role: r }))}
-                  >
-                    {r === 'sales' ? '👤 Sales' : '⚙️ Admin'}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: '#888' }}>Password</label>
+                  <button type="button" className="show-btn" onClick={() => setShowPass(p => !p)}>
+                    {showPass ? 'Hide' : 'Show'}
                   </button>
-                ))}
+                </div>
+                <FormInput name="password" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters" rules={{ required: 'Password required', minLength: { value: 6, message: 'Min 6 chars' } }} />
               </div>
-            </div>
 
-            <button className="btn-submit" type="submit" disabled={isPending}>
-              {isPending ? 'Creating account...' : 'Create account'}
-            </button>
-          </form>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 10 }}>
+                  Role
+                </label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {(['sales', 'admin'] as const).map(r => (
+                    <button
+                      key={r}
+                      type="button"
+                      className={`role-btn ${methods.getValues('role') === r ? 'active' : 'inactive'}`}
+                      onClick={() => methods.setValue('role', r)}
+                    >
+                      {r === 'sales' ? '👤 Sales' : '⚙️ Admin'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button className="btn-submit" type="submit" disabled={isPending}>
+                {isPending ? 'Creating account...' : 'Create account'}
+              </button>
+            </form>
+          </FormProvider>
 
           <p style={{ marginTop: 28, fontSize: 14, color: '#444', textAlign: 'center' }}>
             Already have an account?{' '}
