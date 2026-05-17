@@ -34,8 +34,9 @@ export const useLogin = () => {
       return res.data
     },
     onSuccess: async (data) => {
-      if (data.data?.accessToken) {
-        setToken(data.data.accessToken) // ← memory-ல save
+      const token = data.data?.accessToken || (data as any).accessToken
+      if (token) {
+        setToken(token)
       }
       if (data.data?.user) {
         queryClient.setQueryData(['currentUser'], data.data.user)
