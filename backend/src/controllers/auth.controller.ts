@@ -169,7 +169,7 @@ export const logout = async (
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
-export const getMe = async (req, res, next) => {
+export const getMe = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await User.findById(req.user?.id)
     if (!user) {
