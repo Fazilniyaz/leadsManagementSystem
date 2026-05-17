@@ -50,15 +50,15 @@ const seed = async () => {
   await mongoose.connect(process.env.MONGO_URI as string)
   console.log('Connected...')
 
-  await User.deleteMany({})
+  // await User.deleteMany({})
   await Lead.deleteMany({})
 
   const hashed = await bcrypt.hash('Kitai@2020', 12)
 
-  // Admin
+  // First user = admin, rest = sales
   const admin = await User.create({
-    name: 'Fazil Niyazdeen',
-    email: 'fazilniyazdeen@gmail.com',
+    name: 'Fazil2',
+    email: 'fazil@gmail.com',
     password: hashed,
     role: 'admin',
   })
