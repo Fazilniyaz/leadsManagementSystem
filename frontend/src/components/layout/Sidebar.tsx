@@ -1,54 +1,56 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, GitBranch, Users, BarChart3, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCurrentUser, useLogout } from '../../hooks/useAuth'
 
-const NAV_ITEMS = [
-  { path: '/dashboard',  label: 'Dashboard', icon: '📊' },
-  { path: '/leads',      label: 'Leads',     icon: '📋' },
-  { path: '/reports',    label: 'Reports',   icon: '📈' },
-  { path: '/settings',   label: 'Settings',  icon: '⚙️' },
-]
-const ADMIN_ITEM = { path: '/sales-team', label: 'Sales Team', icon: '👥' }
+interface SidebarProps {
+  collapsed: boolean;
+  onCollapse: (val: boolean) => void;
+}
 
-export const Sidebar = () => {
+export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { data: user } = useCurrentUser()
-  const { mutate: logout, isPending } = useLogout()
+  const { mutate: logout, isPending: loggingOut } = useLogout()
 
   const navItems = [
-    NAV_ITEMS[0],
-    NAV_ITEMS[1],
-    ...(user?.role === 'admin' ? [ADMIN_ITEM] : []),
-    NAV_ITEMS[2],
-    NAV_ITEMS[3],
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/leads',     label: 'Leads',     icon: GitBranch },
+    ...(user?.role === 'admin' ? [{ path: '/sales-team', label: 'Sales Team', icon: Users }] : []),
+    { path: '/reports',   label: 'Reports',   icon: BarChart3 },
+    { path: '/settings',  label: 'Settings',  icon: Settings },
   ]
 
   return (
-    <aside style={{
-      width: 220,
-      minHeight: '100vh',
-      borderRight: '1px solid rgba(240,237,230,0.06)',
-      padding: '28px 14px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 2,
-      position: 'sticky',
-      top: 0,
-      height: '100vh',
+    <aside style={{ 
+      width: collapsed ? 72 : 260, 
+      borderRight: '1px solid rgba(240,237,230,0.06)', 
+      padding: '16px 12px', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: 4, 
+      position: 'fixed', 
+      top: 0, 
+      left: 0,
+      height: '100vh', 
       flexShrink: 0,
       background: '#0a0a0a',
+      zIndex: 40,
+      transition: 'all 0.3s ease-out'
     }}>
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 12px', marginBottom: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 14px', marginBottom: 28, height: 40 }}>
         <div style={{ width: 26, height: 26, background: '#f0ede6', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 13 }}>L</span>
         </div>
-        <span style={{ fontWeight: 600, fontSize: 14, color: '#f0ede6' }}>LeadsMS</span>
+        <span style={{ fontWeight: 600, fontSize: 14, opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s', whiteSpace: 'nowrap', color: '#f0ede6' }}>
+          LeadsMS
+        </span>
       </div>
 
-      {/* Nav */}
       {navItems.map(item => {
         const active = pathname === item.path
+        const Icon = item.icon
         return (
           <button
             key={item.path}
@@ -56,8 +58,9 @@ export const Sidebar = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
+              justifyContent: collapsed ? 'center' : 'flex-start',
               gap: 10,
-              padding: '10px 12px',
+              padding: collapsed ? '10px 0' : '10px 14px',
               borderRadius: 6,
               fontSize: 14,
               fontWeight: 500,
@@ -72,67 +75,68 @@ export const Sidebar = () => {
             }}
             onMouseEnter={e => {
               if (!active) {
-                e.currentTarget.style.background = 'rgba(240,237,230,0.04)'
-                e.currentTarget.style.color = '#aaa'
+                e.currentTarget.style.color = '#f0ede6'
               }
             }}
             onMouseLeave={e => {
               if (!active) {
-                e.currentTarget.style.background = 'transparent'
                 e.currentTarget.style.color = '#555'
               }
             }}
           >
-            <span style={{ fontSize: 16 }}>{item.icon}</span>
-            {item.label}
+            <Icon size={20} />
+            {!collapsed && <span>{item.label}</span>}
           </button>
         )
       })}
 
       <div style={{ flex: 1 }} />
 
-      {/* User card */}
-      <div style={{
-        padding: '12px',
-        borderRadius: 8,
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(240,237,230,0.06)',
-        marginBottom: 8,
-      }}>
+      {/* Collapse toggle */}
+      <button 
+        onClick={() => onCollapse(!collapsed)}
+        style={{ 
+          display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 8,
+          padding: '12px 14px', color: '#555', background: 'transparent', border: 'none', cursor: 'pointer',
+          borderTop: '1px solid rgba(240,237,230,0.06)', transition: 'all 0.2s', width: '100%'
+        }}
+        onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
+        onMouseLeave={e => e.currentTarget.style.color = '#555'}
+      >
+        {collapsed ? <ChevronRight size={20} /> : <><ChevronLeft size={20} /> <span>Collapse</span></>}
+      </button>
+
+      {/* User info */}
+      <div style={{ padding: collapsed ? '12px 0' : '12px 14px', borderRadius: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(240,237,230,0.06)', marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: '50%',
-            background: 'rgba(240,237,230,0.08)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 13, fontWeight: 600, color: '#f0ede6', flexShrink: 0,
-          }}>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(240,237,230,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#f0ede6', flexShrink: 0 }}>
             {user?.name?.[0]?.toUpperCase() ?? '?'}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 500, color: '#f0ede6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {user?.name ?? '—'}
-            </p>
-            <p style={{ fontSize: 11, color: '#444', textTransform: 'capitalize' }}>{user?.role}</p>
-          </div>
+          {!collapsed && (
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: '#f0ede6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
+                {user?.name ?? '—'}
+              </p>
+              <p style={{ fontSize: 11, color: '#444', textTransform: 'capitalize', margin: 0 }}>{user?.role}</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Logout */}
-      <button
-        onClick={() => logout()}
-        disabled={isPending}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 12px', borderRadius: 6,
-          fontSize: 14, fontWeight: 500, color: '#555',
-          background: 'transparent', border: 'none',
-          cursor: 'pointer', fontFamily: 'inherit',
-          width: '100%', textAlign: 'left', transition: 'all 0.15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.color = '#f87171' }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#555' }}
+      <button onClick={() => logout()} disabled={loggingOut} style={{ 
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: collapsed ? '10px 0' : '10px 14px', borderRadius: 6,
+        fontSize: 14, fontWeight: 500, color: '#555',
+        background: 'transparent', border: 'none',
+        cursor: 'pointer', fontFamily: 'inherit',
+        width: '100%', textAlign: 'left', transition: 'all 0.15s',
+        justifyContent: collapsed ? 'center' : 'flex-start'
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.color = '#f87171' }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#555' }}
       >
-        <span>🚪</span> {isPending ? 'Signing out...' : 'Sign out'}
+        <LogOut size={20} /> 
+        {!collapsed && <span>{loggingOut ? 'Signing out...' : 'Sign out'}</span>}
       </button>
     </aside>
   )

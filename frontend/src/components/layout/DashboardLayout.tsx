@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 
 interface DashboardLayoutProps {
@@ -7,7 +8,10 @@ interface DashboardLayoutProps {
   actions?: React.ReactNode
 }
 
-export const DashboardLayout = ({ children, title, subtitle, actions }: DashboardLayoutProps) => (
+export const DashboardLayout = ({ children, title, subtitle, actions }: DashboardLayoutProps) => {
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 1024)
+
+  return (
   <div style={{
     display: 'flex',
     minHeight: '100vh',
@@ -16,7 +20,7 @@ export const DashboardLayout = ({ children, title, subtitle, actions }: Dashboar
     fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
   }}>
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700;900&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
       * { box-sizing: border-box; margin: 0; padding: 0; }
 
       @keyframes shimmer {
@@ -102,11 +106,34 @@ export const DashboardLayout = ({ children, title, subtitle, actions }: Dashboar
         gap: 12px;
       }
       .table-row:hover { background: rgba(255,255,255,0.02); }
+      
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 20px;
+      }
+      
+      @media (max-width: 1024px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+        .dashboard-main {
+          padding: 24px !important;
+        }
+      }
     `}</style>
 
-    <Sidebar />
+    <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
 
-    <main style={{ flex: 1, padding: '40px 40px', overflowY: 'auto', minWidth: 0 }}>
+    <main className="dashboard-main" style={{ 
+      flex: 1, 
+      padding: '40px 40px', 
+      overflowY: 'auto',
+      marginLeft: collapsed ? 72 : 260,
+      transition: 'margin-left 0.3s ease-out',
+      width: '100%',
+      minWidth: 0
+    }}>
       {/* Page header */}
       <div style={{
         display: 'flex',
@@ -118,7 +145,6 @@ export const DashboardLayout = ({ children, title, subtitle, actions }: Dashboar
       }}>
         <div>
           <h1 style={{
-            fontFamily: "'Playfair Display', serif",
             fontSize: 30,
             fontWeight: 700,
             letterSpacing: '-0.02em',
@@ -139,4 +165,5 @@ export const DashboardLayout = ({ children, title, subtitle, actions }: Dashboar
       {children}
     </main>
   </div>
-)
+  )
+}

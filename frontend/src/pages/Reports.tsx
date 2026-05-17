@@ -26,8 +26,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 export default function Reports() {
-  const { data: leadsData, isLoading } = useLeads({ page: 1 })
-  // const { data: allLeadsData } = useLeads({ sort: 'oldest' })
+  const { data: leadsData, isLoading } = useLeads({ limit: 1000 })
   const { data: usersData } = useUsers()
   const { mutate: exportCSV, isPending: exporting } = useExportCSV()
 
@@ -104,7 +103,7 @@ export default function Reports() {
       </div>
 
       {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, marginBottom: 24 }}>
         {/* Status pie */}
         <div style={chartStyle}>
           <h2 style={{ fontSize: 15, fontWeight: 600, color: '#f0ede6', marginBottom: 20 }}>Status breakdown</h2>
@@ -161,7 +160,7 @@ export default function Reports() {
                 <span key={h} style={{ fontSize: 11, fontWeight: 600, color: '#333', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
               ))}
             </div>
-            {memberStats.map(m => (
+            {memberStats.map(m => m.role === "sales" && (
               <div key={m.fullName} className="table-row" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 2fr' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(240,237,230,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#f0ede6', flexShrink: 0 }}>

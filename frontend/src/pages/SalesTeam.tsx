@@ -8,7 +8,7 @@ import type { User } from '../types'
 export default function SalesTeam() {
   const [page, setPage] = useState(1)
   const { data, isLoading } = useUsers(page)
-  const { data: leadsData } = useLeads({ page: 1 })
+  const { data: leadsData } = useLeads({ limit: 1000 })
   const { mutate: updateRole, isPending: updatingRole } = useUpdateUserRole()
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -21,14 +21,14 @@ export default function SalesTeam() {
 
   // Count leads per user
   const leadsByUser = leads.reduce((acc, lead) => {
-    const uid = (lead.assignedTo as any)?._id ?? (lead.assignedTo as any)?.id
-    if (uid) acc[uid] = (acc[uid] || 0) + 1
+    const uid = String((lead.assignedTo as any)?._id ?? (lead.assignedTo as any)?.id ?? lead.assignedTo ?? '')
+    if (uid && uid !== 'undefined' && uid !== '[object Object]') acc[uid] = (acc[uid] || 0) + 1
     return acc
   }, {} as Record<string, number>)
 
   const qualifiedByUser = leads.reduce((acc, lead) => {
-    const uid = (lead.assignedTo as any)?._id ?? (lead.assignedTo as any)?.id
-    if (uid && lead.status === 'qualified') acc[uid] = (acc[uid] || 0) + 1
+    const uid = String((lead.assignedTo as any)?._id ?? (lead.assignedTo as any)?.id ?? lead.assignedTo ?? '')
+    if (uid && uid !== 'undefined' && uid !== '[object Object]' && lead.status === 'qualified') acc[uid] = (acc[uid] || 0) + 1
     return acc
   }, {} as Record<string, number>)
 
@@ -53,15 +53,16 @@ export default function SalesTeam() {
       subtitle={pagination ? `${pagination.total} team members` : undefined}
     >
       {/* Table */}
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,237,230,0.07)', borderRadius: 10, overflow: 'hidden' }}>
-        <div className="table-row" style={{ gridTemplateColumns: COLS, borderBottom: '1px solid rgba(240,237,230,0.08)' }}>
-          {['Member', 'Email', 'Role', 'Leads', 'Qualified', 'Actions'].map(h => (
-            <span key={h} style={{ fontSize: 11, fontWeight: 600, color: '#333', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
-          ))}
-        </div>
+      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,237,230,0.07)', borderRadius: 10, overflowX: 'auto', overflowY: 'hidden' }}>
+        <div style={{ minWidth: 800 }}>
+          <div className="table-row" style={{ gridTemplateColumns: COLS, borderBottom: '1px solid rgba(240,237,230,0.08)' }}>
+            {['Member', 'Email', 'Role', 'Leads', 'Qualified', 'Actions'].map(h => (
+              <span key={h} style={{ fontSize: 11, fontWeight: 600, color: '#333', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
+            ))}
+          </div>
 
-        {isLoading
-          ? Array.from({ length: 5 }).map((_, i) => (
+          {isLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="table-row" style={{ gridTemplateColumns: COLS }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
@@ -74,9 +75,12 @@ export default function SalesTeam() {
                 <Shimmer width={80} />
               </div>
             ))
-          : users.map(user => {
-              const total = leadsByUser[user.id] ?? 0
-              const qualified = qualifiedByUser[user.id] ?? 0
+            : users
+                .filter(user => user.role === 'sales')
+                .map(user => {
+              const userId = user._id ?? user.id
+              const total = leadsByUser[userId] ?? 0
+              const qualified = qualifiedByUser[userId] ?? 0
               const rate = total > 0 ? Math.round((qualified / total) * 100) : 0
               return (
                 <div key={user.id} className="table-row" style={{ gridTemplateColumns: COLS }}>
@@ -118,6 +122,7 @@ export default function SalesTeam() {
                 </div>
               )
             })}
+        </div>
       </div>
 
       {/* Pagination */}

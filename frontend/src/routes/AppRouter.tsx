@@ -1,69 +1,49 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { useCurrentUser } from '../hooks/useAuth';
-import Home from '../pages/Home';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import Dashboard from '../pages/Dashboard';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useCurrentUser } from '../hooks/useAuth'
+import Home from '../pages/Home'
+import Login from '../pages/Login'
+import Register from '../pages/Register'
+import Dashboard from '../pages/Dashboard'
+import Leads from '../pages/Leads'
+import SalesTeam from '../pages/SalesTeam'
+import Reports from '../pages/Reports'
+import Settings from '../pages/Settings'
 
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { data: user, isLoading } = useCurrentUser();
+const Spinner = () => (
+  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}>
+    <div style={{ width: 28, height: 28, border: '2px solid rgba(240,237,230,0.15)', borderTopColor: '#f0ede6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+)
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => {
+  const { data: user, isLoading } = useCurrentUser()
+  if (isLoading) return <Spinner />
+  if (!user) return <Navigate to="/login" replace />
+  if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />
+  return <>{children}</>
+}
 
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
-};
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { data: user, isLoading } = useCurrentUser()
+  if (isLoading) return <Spinner />
+  return !user ? <>{children}</> : <Navigate to="/dashboard" replace />
+}
 
-const PublicRoute = ({ children }: { children: ReactNode }) => {
-  const { data: user, isLoading } = useCurrentUser();
+const AppRouter = () => (
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+      <Route path="/sales-team" element={<ProtectedRoute adminOnly><SalesTeam /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  </BrowserRouter>
+)
 
-  if (isLoading) {
-    // Keep public pages stable while auth state initializes.
-    return <>{children}</>;
-  }
-
-  return !user ? <>{children}</> : <Navigate to="/dashboard" replace />;
-};
-
-const AppRouter = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
-};
-
-export default AppRouter;
+export default AppRouter

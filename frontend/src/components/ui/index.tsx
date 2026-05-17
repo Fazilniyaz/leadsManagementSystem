@@ -60,7 +60,6 @@ export const StatCard = ({ label, value, sub, icon }: StatCardProps) => (
       {icon && <span style={{ fontSize: 18 }}>{icon}</span>}
     </div>
     <p style={{
-      fontFamily: "'Playfair Display', serif",
       fontSize: 34,
       fontWeight: 700,
       color: '#f0ede6',

@@ -1,8 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
-import { useCurrentUser, useLogout } from '../hooks/useAuth'
+import { useCurrentUser } from '../hooks/useAuth'
 import type { LeadsResponse, UsersResponse } from '../types'
+import { RevenueChart } from '../components/dashboard/RevenueChart'
+import { TopPerformers } from '../components/dashboard/TopPerformers'
+import { DashboardLayout } from '../components/layout/DashboardLayout'
 
 const STATUS_COLORS: Record<string, string> = {
   new: '#3b82f6',
@@ -21,11 +24,10 @@ const STATUS_BG: Record<string, string> = {
 export default function Dashboard() {
   const navigate = useNavigate()
   const { data: user } = useCurrentUser()
-  const { mutate: logout, isPending: loggingOut } = useLogout()
 
   const { data: leadsData, isLoading: leadsLoading } = useQuery<LeadsResponse>({
-    queryKey: ['leads', { page: 1 }],
-    queryFn: () => axiosInstance.get('/leads?page=1').then(r => r.data),
+    queryKey: ['leads', { limit: 1000 }],
+    queryFn: () => axiosInstance.get('/leads?limit=1000').then(r => r.data),
     staleTime: 1000 * 60 * 5,
   })
 
@@ -49,48 +51,103 @@ export default function Dashboard() {
   const qualifiedCount = leads.filter(l => l.status === 'qualified').length
   const conversionRate = leads.length > 0 ? Math.round((qualifiedCount / leads.length) * 100) : 0
 
+  const topPerformersData = (() => {
+    const userStats = new Map<string, { name: string, total: number, qualified: number }>()
+    
+    leads.forEach(l => {
+      const assignee = l.assignedTo as any
+      if (!assignee) return
+      const id = String(assignee._id ?? assignee.id)
+      const name = assignee.name || 'Unknown'
+      
+      if (!userStats.has(id)) {
+        userStats.set(id, { name, total: 0, qualified: 0 })
+      }
+      
+      const stats = userStats.get(id)!
+      stats.total += 1
+      if (l.status === 'qualified') {
+        stats.qualified += 1
+      }
+    })
+    
+    return Array.from(userStats.values())
+      .map(s => ({
+        name: s.name,
+        totalLeads: s.total,
+        qualifiedLeads: s.qualified,
+        conversionRate: s.total > 0 ? Math.round((s.qualified / s.total) * 100) : 0
+      }))
+      .sort((a, b) => b.qualifiedLeads - a.qualifiedLeads || b.totalLeads - a.totalLeads)
+      .slice(0, 5)
+      .map((s, idx) => ({ ...s, rank: idx + 1 }))
+  })();
+
   const STAT_CARDS = [
-    { label: 'Total leads', value: totalLeads, sub: 'All time', icon: '📋' },
-    { label: 'Qualified', value: leads.filter(l => l.status === 'qualified').length, sub: 'This page', icon: '🎯' },
-    { label: 'Conversion', value: `${conversionRate}%`, sub: 'Qualified rate', icon: '📈' },
-    ...(user?.role === 'admin' ? [{ label: 'Team size', value: totalUsers, sub: 'Active users', icon: '👥' }] : []),
+    { label: 'Total leads', value: totalLeads, change: '+12.5%', changeType: 'positive' as const, icon: '📋' },
+    { label: 'Qualified', value: leads.filter(l => l.status === 'qualified').length, change: '+3.2%', changeType: 'positive' as const, icon: '🎯' },
+    { label: 'Conversion', value: `${conversionRate}%`, change: conversionRate > 0 ? `+${conversionRate}%` : '0%', changeType: conversionRate > 0 ? 'positive' as const : 'neutral' as const, icon: '📈' },
+    ...(user?.role === 'admin' ? [{ label: 'Team size', value: totalUsers, change: `+${totalUsers}`, changeType: 'positive' as const, icon: '👥' }] : []),
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#f0ede6', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", display: 'flex' }}>
+    <DashboardLayout 
+      title="Dashboard" 
+      subtitle={`Good to see you, ${user?.name?.split(' ')[0] ?? 'there'} 👋`}
+    >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700;900&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .stat-card {
+          position: relative;
+          background: black;
+          border: 1px solid #2a2d35;
+          border-radius: 12px;
+          padding: 20px;
+          transition: border-color 0.3s, transform 0.3s;
+          overflow: hidden;
+        }
+        .stat-card:hover {
+          border-color: rgba(74, 222, 128, 0.5);
+          transform: translateY(-2px);
+        }
+        .stat-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(74, 222, 128, 0.05) 0%, transparent 100%);
+          opacity: 0;
+          transition: opacity 0.5s;
+          pointer-events: none;
+        }
+        .stat-card:hover::before {
+          opacity: 1;
+        }
 
-        .nav-item {
+        .stat-card-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          background: #2a2d35;
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px 14px;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #555;
-          cursor: pointer;
-          transition: all 0.2s;
-          text-decoration: none;
-          border: none;
-          background: none;
-          font-family: inherit;
-          width: 100%;
-          text-align: left;
+          justify-content: center;
+          font-size: 16px;
+          transition: background 0.3s;
         }
-        .nav-item:hover { background: rgba(240,237,230,0.05); color: #f0ede6; }
-        .nav-item.active { background: rgba(240,237,230,0.08); color: #f0ede6; }
+        .stat-card:hover .stat-card-icon {
+          background: rgba(74, 222, 128, 0.1);
+        }
 
-        .stat-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(240,237,230,0.08);
-          border-radius: 10px;
-          padding: 24px 22px;
-          transition: border-color 0.2s, transform 0.2s;
+        .stat-change {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 13px;
+          font-weight: 500;
+          margin-bottom: 2px;
         }
-        .stat-card:hover { border-color: rgba(240,237,230,0.16); transform: translateY(-2px); }
+        .stat-change.positive { color: #4ade80; }
+        .stat-change.negative { color: #f87171; }
+        .stat-change.neutral { color: #6b7280; }
 
         .lead-row {
           display: grid;
@@ -121,150 +178,111 @@ export default function Dashboard() {
           border-radius: 4px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        .logout-btn {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 14px;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #555;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-          background: none;
-          font-family: inherit;
-          width: 100%;
-          text-align: left;
-        }
-        .logout-btn:hover { background: rgba(248,113,113,0.08); color: #f87171; }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(240,237,230,0.1); border-radius: 2px; }
       `}</style>
 
-      {/* Sidebar */}
-      <aside style={{ width: 220, borderRight: '1px solid rgba(240,237,230,0.06)', padding: '28px 16px', display: 'flex', flexDirection: 'column', gap: 4, position: 'sticky', top: 0, height: '100vh', flexShrink: 0 }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 14px', marginBottom: 28 }}>
-          <div style={{ width: 26, height: 26, background: '#f0ede6', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 13 }}>L</span>
-          </div>
-          <span style={{ fontWeight: 600, fontSize: 14 }}>LeadsMS</span>
-        </div>
-
-        <button className="nav-item active">
-          <span>📊</span> Dashboard
-        </button>
-        <button className="nav-item" onClick={() => navigate('/leads')}>
-          <span>📋</span> Leads
-        </button>
-        {user?.role === 'admin' && (
-          <button className="nav-item" onClick={() => navigate('/users')}>
-            <span>👥</span> Team
-          </button>
-        )}
-
-        <div style={{ flex: 1 }} />
-
-        {/* User info */}
-        <div style={{ padding: '12px 14px', borderRadius: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(240,237,230,0.06)', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(240,237,230,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
-              {user?.name?.[0]?.toUpperCase() ?? '?'}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: '#f0ede6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user?.name ?? '—'}
-              </p>
-              <p style={{ fontSize: 11, color: '#444', textTransform: 'capitalize' }}>{user?.role}</p>
-            </div>
-          </div>
-        </div>
-
-        <button className="logout-btn" onClick={() => logout()} disabled={loggingOut}>
-          <span>🚪</span> {loggingOut ? 'Signing out...' : 'Sign out'}
-        </button>
-      </aside>
-
-      {/* Main content */}
-      <main style={{ flex: 1, padding: '40px 40px', overflowY: 'auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 6 }}>
-            Dashboard
-          </h1>
-          <p style={{ fontSize: 14, color: '#444', fontWeight: 300 }}>
-            Good to see you, {user?.name?.split(' ')[0] ?? 'there'} 👋
-          </p>
-        </div>
-
         {/* Stat cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 40 }}>
           {leadsLoading
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="stat-card">
-                  <div className="shimmer" style={{ height: 14, width: 80, marginBottom: 12 }} />
-                  <div className="shimmer" style={{ height: 32, width: 60, marginBottom: 8 }} />
-                  <div className="shimmer" style={{ height: 12, width: 100 }} />
-                </div>
-              ))
-            : STAT_CARDS.map(card => (
-                <div key={card.label} className="stat-card">
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <p style={{ fontSize: 13, color: '#555', fontWeight: 400 }}>{card.label}</p>
-                    <span style={{ fontSize: 18 }}>{card.icon}</span>
+              <div key={i} className="stat-card">
+                <div className="shimmer" style={{ height: 14, width: 80, marginBottom: 12 }} />
+                <div className="shimmer" style={{ height: 32, width: 60, marginBottom: 8 }} />
+                <div className="shimmer" style={{ height: 12, width: 100 }} />
+              </div>
+            ))
+            : STAT_CARDS.map((card, index) => (
+              <div key={card.label} className="stat-card" style={{ animationDelay: `${index * 100}ms` }}>
+                {/* Header row: title + icon */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, color: '#9ca3af', fontWeight: 500 }}>{card.label}</span>
+                  <div className="stat-card-icon">
+                    <span>{card.icon}</span>
                   </div>
-                  <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700, color: '#f0ede6', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 6 }}>
-                    {card.value}
-                  </p>
-                  <p style={{ fontSize: 12, color: '#333' }}>{card.sub}</p>
                 </div>
-              ))}
+                {/* Value + change row */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 700, color: '#f0ede6', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                    {card.value}
+                  </span>
+                  <span className={`stat-change ${card.changeType}`}>
+                    <span style={{ fontSize: 14 }}>{card.changeType === 'positive' ? '↗' : '↘'}</span>
+                    {card.change}
+                  </span>
+                </div>
+              </div>
+            ))}
+        </div>
+
+        {/* Charts section */}
+        <div className="dashboard-grid" style={{ marginBottom: 20 }}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <div className="dashboard-grid">
+              <div style={{ flex: 2 }}>
+                <RevenueChart />
+              </div>
+              <div style={{ flex: 1 }}>
+                <TopPerformers data={topPerformersData} />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Status breakdown + Recent leads */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20 }}>
-          {/* Status breakdown */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,237,230,0.07)', borderRadius: 10, padding: '24px 20px' }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 20, color: '#f0ede6' }}>
-              Pipeline status
-            </h2>
-            {leadsLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} style={{ marginBottom: 16 }}>
-                    <div className="shimmer" style={{ height: 12, width: '100%', marginBottom: 8 }} />
-                    <div className="shimmer" style={{ height: 6, width: '100%', borderRadius: 3 }} />
+        <div className="dashboard-grid">
+          {/* Pipeline Stages */}
+          <div style={{ background: 'black', border: '1px solid #2a2d35', borderRadius: 12, padding: 20 }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f0ede6', marginBottom: 2 }}>
+                Pipeline Stages
+              </h2>
+              <p style={{ fontSize: 14, color: '#9ca3af', marginTop: 2 }}>Distribution by stage</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {leadsLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i}>
+                    <div className="shimmer" style={{ height: 14, width: '100%', marginBottom: 8 }} />
+                    <div className="shimmer" style={{ height: 8, width: '100%', borderRadius: 999 }} />
                   </div>
                 ))
-              : (['new', 'contacted', 'qualified', 'lost'] as const).map(status => {
+                : (['new', 'contacted', 'qualified', 'lost'] as const).map((status, index) => {
                   const count = statusCounts[status] ?? 0
                   const pct = leads.length > 0 ? Math.round((count / leads.length) * 100) : 0
                   return (
-                    <div key={status} style={{ marginBottom: 16 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontSize: 13, color: '#888', textTransform: 'capitalize' }}>{status}</span>
-                        <span style={{ fontSize: 13, color: '#555' }}>{count} · {pct}%</span>
+                    <div key={status}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#f0ede6', textTransform: 'capitalize' }}>{status}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 14, color: '#9ca3af' }}>{count}</span>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: '#f0ede6' }}>{pct}%</span>
+                        </div>
                       </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: 8, background: '#2a2d35', borderRadius: 999, overflow: 'hidden' }}>
                         <div style={{
                           height: '100%',
                           width: `${pct}%`,
                           background: STATUS_COLORS[status],
-                          borderRadius: 2,
-                          transition: 'width 0.6s cubic-bezier(.16,1,.3,1)',
+                          borderRadius: 999,
+                          transition: `width 1s ease-out ${index * 150}ms`,
                         }} />
                       </div>
                     </div>
                   )
                 })}
+            </div>
+
+            {/* Total */}
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #2a2d35' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 14, color: '#9ca3af' }}>Total Leads</span>
+                <span style={{ fontSize: 20, fontWeight: 700, color: '#f0ede6' }}>{totalLeads}</span>
+              </div>
+            </div>
           </div>
 
+
           {/* Recent leads */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,237,230,0.07)', borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ background: 'black', border: '1px solid rgba(240,237,230,0.07)', borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ padding: '20px 20px 0', marginBottom: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ fontSize: 15, fontWeight: 600, color: '#f0ede6' }}>Recent leads</h2>
@@ -288,20 +306,20 @@ export default function Dashboard() {
 
             {leadsLoading
               ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="lead-row">
-                    {Array.from({ length: 4 }).map((_, j) => (
-                      <div key={j} className="shimmer" style={{ height: 14, width: j === 0 ? '70%' : '60%' }} />
-                    ))}
-                  </div>
-                ))
+                <div key={i} className="lead-row">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <div key={j} className="shimmer" style={{ height: 14, width: j === 0 ? '70%' : '60%' }} />
+                  ))}
+                </div>
+              ))
               : leads.length === 0
-              ? (
+                ? (
                   <div style={{ padding: '48px 20px', textAlign: 'center' }}>
                     <p style={{ fontSize: 32, marginBottom: 12 }}>📭</p>
                     <p style={{ fontSize: 14, color: '#444' }}>No leads yet</p>
                   </div>
                 )
-              : leads.slice(0, 6).map(lead => (
+                : leads.slice(0, 6).map(lead => (
                   <div key={lead._id} className="lead-row">
                     <div>
                       <p style={{ fontSize: 14, fontWeight: 500, color: '#f0ede6', marginBottom: 2 }}>{lead.name}</p>
@@ -321,7 +339,6 @@ export default function Dashboard() {
                 ))}
           </div>
         </div>
-      </main>
-    </div>
+    </DashboardLayout>
   )
 }

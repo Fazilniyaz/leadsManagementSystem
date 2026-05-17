@@ -7,6 +7,7 @@ export interface LeadFilters {
   source?: string
   search?: string
   sort?: 'latest' | 'oldest'
+  limit?: number
 }
 
 export interface CreateLeadPayload {

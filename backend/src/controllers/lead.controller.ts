@@ -14,7 +14,8 @@ export const getAllLeads = async (
 ): Promise<void> => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = PAGE_LIMIT;
+    const requestedLimit = parseInt(req.query.limit as string);
+    const limit = requestedLimit > 0 ? Math.min(requestedLimit, 1000) : PAGE_LIMIT;
     const skip = (page - 1) * limit;
 
     // Filters

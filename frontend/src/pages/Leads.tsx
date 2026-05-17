@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
 import { Badge, Shimmer, Confirm } from '../components/ui'
 import { LeadModal } from '../components/leads/LeadModal'
@@ -11,10 +11,10 @@ const COLS = '2fr 1.8fr 1fr 1fr 1.2fr 1fr'
 
 function useDebounce<T>(value: T, delay = 400): T {
   const [debounced, setDebounced] = useState(value)
-  useState(() => {
+  useEffect(() => {
     const t = setTimeout(() => setDebounced(value), delay)
     return () => clearTimeout(t)
-  })
+  }, [value, delay])
   return debounced
 }
 
@@ -65,7 +65,7 @@ export default function Leads() {
           placeholder="🔍  Search name or email..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: 260 }}
+          style={{ maxWidth: 300, minWidth: 200, flex: 1 }}
         />
         <select value={filters.status ?? ''} onChange={e => setFilter('status', e.target.value)} style={{ width: 'auto' }}>
           <option value="">All statuses</option>
@@ -87,13 +87,14 @@ export default function Leads() {
       </div>
 
       {/* Table */}
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,237,230,0.07)', borderRadius: 10, overflow: 'hidden', opacity: isFetching && !isLoading ? 0.7 : 1, transition: 'opacity 0.2s' }}>
-        {/* Table header */}
-        <div className="table-row" style={{ gridTemplateColumns: COLS, borderBottom: '1px solid rgba(240,237,230,0.08)' }}>
-          {['Name', 'Email', 'Status', 'Source', 'Assigned to', 'Actions'].map(h => (
-            <span key={h} style={{ fontSize: 11, fontWeight: 600, color: '#333', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
-          ))}
-        </div>
+      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,237,230,0.07)', borderRadius: 10, overflowX: 'auto', overflowY: 'hidden', opacity: isFetching && !isLoading ? 0.7 : 1, transition: 'opacity 0.2s' }}>
+        <div style={{ minWidth: 900 }}>
+          {/* Table header */}
+          <div className="table-row" style={{ gridTemplateColumns: COLS, borderBottom: '1px solid rgba(240,237,230,0.08)' }}>
+            {['Name', 'Email', 'Status', 'Source', 'Assigned to', 'Actions'].map(h => (
+              <span key={h} style={{ fontSize: 11, fontWeight: 600, color: '#333', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
+            ))}
+          </div>
 
         {/* Rows */}
         {isLoading
@@ -147,11 +148,12 @@ export default function Leads() {
                 </div>
               </div>
             ))}
+        </div>
       </div>
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, flexWrap: 'wrap', gap: 10 }}>
           <p style={{ fontSize: 13, color: '#444' }}>
             Page {pagination.page} of {pagination.totalPages}
           </p>

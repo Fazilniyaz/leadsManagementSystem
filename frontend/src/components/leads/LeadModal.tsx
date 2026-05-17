@@ -31,7 +31,7 @@ export const LeadModal = ({ open, onClose, lead }: LeadModalProps) => {
         status: lead.status,
         source: lead.source,
         notes: lead.notes ?? '',
-        assignedTo: (lead.assignedTo as any)?._id ?? (lead.assignedTo as any)?.id ?? '',
+        assignedTo: String((lead.assignedTo as any)?._id ?? (lead.assignedTo as any)?.id ?? ''),
       })
     } else {
       setForm(EMPTY)
@@ -94,9 +94,12 @@ export const LeadModal = ({ open, onClose, lead }: LeadModalProps) => {
         <FormField label="Assign to">
           <select value={form.assignedTo} onChange={e => set('assignedTo', e.target.value)}>
             <option value="">Unassigned</option>
-            {salesUsers.map(u => (
-              <option key={u.id} value={u.id}>{u.name}</option>
-            ))}
+            {salesUsers.map(u => {
+              const uid = (u as any)._id ?? u.id
+              return (
+                <option key={uid} value={uid}>{u.name}</option>
+              )
+            })}
           </select>
         </FormField>
 
