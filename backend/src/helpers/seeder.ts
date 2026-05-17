@@ -53,12 +53,12 @@ const seed = async () => {
   await User.deleteMany({})
   await Lead.deleteMany({})
 
-  const hashed = await bcrypt.hash('password123', 12)
+  const hashed = await bcrypt.hash('Kitai@2020', 12)
 
   // Admin
   const admin = await User.create({
-    name: 'Admin User',
-    email: 'admin@leads.com',
+    name: 'Fazil Niyazdeen',
+    email: 'fazilniyazdeen@gmail.com',
     password: hashed,
     role: 'admin',
   })
