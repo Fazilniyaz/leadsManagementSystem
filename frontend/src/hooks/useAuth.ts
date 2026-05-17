@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
-import type { AuthResponse, User, LeadsResponse, UsersResponse } from '../types';
-import axios from 'axios';
+import type { AuthResponse, User  } from '../types';
+// LeadsResponse, UsersResponse
+// import axios from 'axios';
 import { setToken, clearToken } from '../api/axiosInstance'
 
 
