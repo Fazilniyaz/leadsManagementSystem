@@ -33,7 +33,7 @@ export function RevenueChart() {
   }, []);
 
   return (
-    <div style={{ background: 'black', border: '1px solid #2a2d35', borderRadius: 12, padding: 20, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: '#1a1d23', border: '1px solid #2a2d35', borderRadius: 12, padding: 20, height: 380, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 600, color: '#f0ede6', margin: 0 }}>Revenue Trend</h3>

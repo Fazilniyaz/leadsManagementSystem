@@ -152,9 +152,10 @@ interface ConfirmProps {
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  confirmText?: string
 }
 
-export const Confirm = ({ open, message, onConfirm, onCancel, loading }: ConfirmProps) => (
+export const Confirm = ({ open, message, onConfirm, onCancel, loading, confirmText = 'Delete' }: ConfirmProps) => (
   <Modal open={open} onClose={onCancel} title="Confirm action" width={380}>
     <p style={{ fontSize: 15, color: '#888', marginBottom: 28, lineHeight: 1.6 }}>{message}</p>
     <div style={{ display: 'flex', gap: 12 }}>
@@ -166,7 +167,7 @@ export const Confirm = ({ open, message, onConfirm, onCancel, loading }: Confirm
         onClick={onConfirm}
         disabled={loading}
         style={{ flex: 1, padding: '11px', background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 6, color: '#f87171', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 600 }}
-      >{loading ? 'Deleting...' : 'Delete'}</button>
+      >{loading ? 'Please wait...' : confirmText}</button>
     </div>
   </Modal>
 )

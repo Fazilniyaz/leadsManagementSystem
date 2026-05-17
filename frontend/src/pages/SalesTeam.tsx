@@ -148,7 +148,7 @@ export default function SalesTeam() {
         </p>
         <div style={{ display: 'flex', gap: 12 }}>
           <button className="btn-ghost" style={{ flex: 1 }} onClick={() => setRoleModal(false)}>Cancel</button>
-          <button className="btn-primary" style={{ flex: 1 }} onClick={handleRoleUpdate} disabled={updatingRole}>
+          <button className="btn-primary" style={{ flex: 1 }} onClick={handleRoleUpdate} disabled={updatingRole || newRole === selectedUser?.role}>
             {updatingRole ? 'Saving...' : 'Update role'}
           </button>
         </div>

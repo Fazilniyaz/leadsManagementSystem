@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, GitBranch, Users, BarChart3, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCurrentUser, useLogout } from '../../hooks/useAuth'
+import { Confirm } from '../ui'
 
 interface SidebarProps {
   collapsed: boolean;
@@ -12,6 +14,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
   const navigate = useNavigate()
   const { data: user } = useCurrentUser()
   const { mutate: logout, isPending: loggingOut } = useLogout()
+  const [confirmLogout, setConfirmLogout] = useState(false)
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -123,7 +126,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         </div>
       </div>
 
-      <button onClick={() => logout()} disabled={loggingOut} style={{ 
+      <button onClick={() => setConfirmLogout(true)} disabled={loggingOut} style={{ 
         display: 'flex', alignItems: 'center', gap: 10,
         padding: collapsed ? '10px 0' : '10px 14px', borderRadius: 6,
         fontSize: 14, fontWeight: 500, color: '#555',
@@ -138,6 +141,15 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         <LogOut size={20} /> 
         {!collapsed && <span>{loggingOut ? 'Signing out...' : 'Sign out'}</span>}
       </button>
+
+      <Confirm
+        open={confirmLogout}
+        message="Are you sure you want to sign out?"
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={() => logout()}
+        loading={loggingOut}
+        confirmText="Sign out"
+      />
     </aside>
   )
 }
