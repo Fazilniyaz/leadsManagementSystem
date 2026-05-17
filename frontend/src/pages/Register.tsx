@@ -6,7 +6,7 @@ import FormInput from '../components/FormInput'
 
 export default function Register() {
   const { mutate: register, isPending, error, isError } = useRegister()
-  const methods = useForm({ defaultValues: { name: '', email: '', password: '', role: 'sales' } })
+  const methods = useForm({ defaultValues: { name: '', email: '', password: '' } })
   const [showPass, setShowPass] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -23,7 +23,7 @@ export default function Register() {
   }, [])
 
   const handleSubmit = (data: any) => {
-    register(data)
+    register({ ...data, role: 'sales' })
   }
 
   const errMsg = isError
@@ -81,31 +81,6 @@ export default function Register() {
           pointer-events: none;
         }
 
-        .role-btn {
-          flex: 1;
-          padding: 12px;
-          border-radius: 6px;
-          font-family: inherit;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: 1px solid rgba(240,237,230,0.1);
-        }
-        .role-btn.active {
-          background: rgba(240,237,230,0.1);
-          border-color: rgba(240,237,230,0.3);
-          color: #f0ede6;
-        }
-        .role-btn.inactive {
-          background: transparent;
-          color: #555;
-        }
-        .role-btn.inactive:hover {
-          border-color: rgba(240,237,230,0.2);
-          color: #888;
-        }
-
         .show-btn {
           background: none;
           border: none;
@@ -125,9 +100,9 @@ export default function Register() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '48px 56px', borderRight: '1px solid rgba(240,237,230,0.06)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, zIndex: 1 }}>
           <div style={{ width: 30, height: 30, background: '#f0ede6', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 15 }}>L</span>
+            <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 15 }}>G</span>
           </div>
-          <span style={{ color: '#f0ede6', fontWeight: 600, fontSize: 16 }}>LeadsMS</span>
+          <span style={{ color: '#f0ede6', fontWeight: 600, fontSize: 16 }}>GigFlow</span>
         </div>
 
         <div style={{ zIndex: 1 }}>
@@ -157,7 +132,7 @@ export default function Register() {
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: '#2a2a2a', zIndex: 1 }}>© 2025 LeadsMS</p>
+        <p style={{ fontSize: 13, color: '#2a2a2a', zIndex: 1 }}>© 2025 GigFlow</p>
 
         <div style={{ position: 'absolute', top: -100, right: -100, width: 350, height: 350, borderRadius: '50%', border: '1px solid rgba(240,237,230,0.04)', pointerEvents: 'none' }} />
       </div>
@@ -170,7 +145,7 @@ export default function Register() {
               Create account
             </h1>
             <p style={{ fontSize: 15, color: '#555', fontWeight: 300 }}>
-              Join your team on LeadsMS
+              Join your team on GigFlow
             </p>
           </div>
 
@@ -194,24 +169,6 @@ export default function Register() {
                   </button>
                 </div>
                 <FormInput name="password" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters" rules={{ required: 'Password required', minLength: { value: 6, message: 'Min 6 chars' } }} />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 10 }}>
-                  Role
-                </label>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  {(['sales', 'admin'] as const).map(r => (
-                    <button
-                      key={r}
-                      type="button"
-                      className={`role-btn ${methods.getValues('role') === r ? 'active' : 'inactive'}`}
-                      onClick={() => methods.setValue('role', r)}
-                    >
-                      {r === 'sales' ? '👤 Sales' : '⚙️ Admin'}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <button className="btn-submit" type="submit" disabled={isPending}>

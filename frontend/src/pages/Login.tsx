@@ -102,9 +102,9 @@ export default function Login() {
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, zIndex: 1 }}>
           <div style={{ width: 30, height: 30, background: '#f0ede6', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 15 }}>L</span>
+            <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 15 }}>G</span>
           </div>
-          <span style={{ color: '#f0ede6', fontWeight: 600, fontSize: 16 }}>LeadsMS</span>
+          <span style={{ color: '#f0ede6', fontWeight: 600, fontSize: 16 }}>GigFlow</span>
         </div>
 
         {/* Quote */}
@@ -117,7 +117,7 @@ export default function Login() {
 
         {/* Bottom decoration */}
         <div style={{ zIndex: 1 }}>
-          <p style={{ fontSize: 13, color: '#2a2a2a' }}>© 2025 LeadsMS · All rights reserved</p>
+          <p style={{ fontSize: 13, color: '#2a2a2a' }}>© 2025 GigFlow · All rights reserved</p>
         </div>
 
         {/* Decorative circle */}

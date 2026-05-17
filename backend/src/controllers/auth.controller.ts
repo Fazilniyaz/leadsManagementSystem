@@ -28,7 +28,15 @@ export const register = async (
       return;
     }
 
-    const user = await User.create({ name, email, password, role });
+    const userCount = await User.countDocuments()
+
+const user = await User.create({
+  name,
+  email,
+  password,
+  role: userCount === 0 ? 'admin' : 'sales', // ← First user = admin, rest = sales
+})
+
 
     // const accessToken = generateAccessToken({
     //   id: user._id.toString(),

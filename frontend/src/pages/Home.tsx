@@ -162,18 +162,22 @@ export default function Home() {
           .features-grid { grid-template-columns: 1fr !important; }
           .stats-row { flex-direction: column !important; gap: 24px !important; }
           .hero-buttons { flex-direction: column !important; }
+          .home-nav { padding: 14px 20px !important; }
+          .home-nav-links { gap: 16px !important; }
+          .hero-section { padding: 80px 20px 60px !important; }
+          .section-pad { padding-left: 20px !important; padding-right: 20px !important; }
         }
       `}</style>
 
       {/* Nav */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 48px', borderBottom: '1px solid rgba(240,237,230,0.06)', position: 'sticky', top: 0, background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(12px)', zIndex: 100 }}>
+      <nav className="home-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '20px 48px', borderBottom: '1px solid rgba(240,237,230,0.06)', position: 'sticky', top: 0, background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(12px)', zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 28, height: 28, background: '#f0ede6', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 14 }}>L</span>
+            <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 14 }}>G</span>
           </div>
-          <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em' }}>LeadsMS</span>
+          <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em' }}>GigFlow</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+        <div className="home-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <a href="#features" className="nav-link">Features</a>
           <a href="#stats" className="nav-link">Why us</a>
           <button className="btn-primary" style={{ padding: '10px 22px', fontSize: 14 }} onClick={() => navigate('/login')}>
@@ -183,7 +187,7 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: '120px 48px 100px' }}>
+      <section className="hero-section" style={{ position: 'relative', overflow: 'hidden', padding: '120px 48px 100px' }}>
         <div className="grid-bg" />
         <div className="glow" />
 
@@ -224,7 +228,7 @@ export default function Home() {
       </section>
 
       {/* Stats */}
-      <section id="stats" style={{ padding: '60px 48px', borderTop: '1px solid rgba(240,237,230,0.06)', borderBottom: '1px solid rgba(240,237,230,0.06)' }}>
+      <section id="stats" className="section-pad" style={{ padding: '60px 48px', borderTop: '1px solid rgba(240,237,230,0.06)', borderBottom: '1px solid rgba(240,237,230,0.06)' }}>
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
           <div className="stats-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
             {STATS.map((s) => (
@@ -242,7 +246,7 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section id="features" style={{ padding: '100px 48px' }}>
+      <section id="features" className="section-pad" style={{ padding: '100px 48px' }}>
         <div style={{ maxWidth: 920, margin: '0 auto' }}>
           <div style={{ marginBottom: 64 }}>
             <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#555', marginBottom: 16 }}>
@@ -270,13 +274,13 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: '80px 48px 100px', borderTop: '1px solid rgba(240,237,230,0.06)' }}>
+      <section className="section-pad" style={{ padding: '80px 48px 100px', borderTop: '1px solid rgba(240,237,230,0.06)' }}>
         <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 48, fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 20, color: '#f0ede6', lineHeight: 1.1 }}>
             Ready to close more deals?
           </h2>
           <p style={{ fontSize: 16, color: '#666', marginBottom: 40, fontWeight: 300 }}>
-            Join your team on LeadsMS. Setup takes under 2 minutes.
+            Join your team on GigFlow. Setup takes under 2 minutes.
           </p>
           <button className="btn-primary" style={{ padding: '16px 44px', fontSize: 16 }} onClick={() => navigate('/register')}>
             Create your account
@@ -285,8 +289,8 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer style={{ padding: '24px 48px', borderTop: '1px solid rgba(240,237,230,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>© 2025 LeadsMS</span>
+      <footer className="section-pad" style={{ padding: '24px 48px', borderTop: '1px solid rgba(240,237,230,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <span style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>© 2025 GigFlow</span>
         <span style={{ fontSize: 13, color: '#333' }}>Built with MERN + TypeScript</span>
       </footer>
     </div>

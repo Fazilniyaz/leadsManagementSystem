@@ -44,10 +44,10 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 14px', marginBottom: 28, height: 40 }}>
         <div style={{ width: 26, height: 26, background: '#f0ede6', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 13 }}>L</span>
+          <span style={{ color: '#0a0a0a', fontWeight: 900, fontSize: 13 }}>G</span>
         </div>
         <span style={{ fontWeight: 600, fontSize: 14, opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s', whiteSpace: 'nowrap', color: '#f0ede6' }}>
-          LeadsMS
+          GigFlow
         </span>
       </div>
 
