@@ -1,71 +1,105 @@
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import { User } from '../models/user.model';
-import { Lead } from '../models/lead.model';
+import dotenv from 'dotenv'
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
+import { User } from '../models/user.model'
+import { Lead } from '../models/lead.model'
 
-dotenv.config();
+dotenv.config()
+
+const NAMES = [
+  'Arjun Kumar', 'Sneha Reddy', 'Vikram Singh', 'Meera Pillai', 'Karthik Menon',
+  'Divya Thomas', 'Rohan Verma', 'Ananya Das', 'Siddharth Rao', 'Lakshmi Iyer',
+  'Rahul Gupta', 'Pooja Mehta', 'Amit Shah', 'Priya Nair', 'Suresh Babu',
+  'Kavitha Rajan', 'Deepak Joshi', 'Nithya Krishnan', 'Manoj Tiwari', 'Sunita Patel',
+  'Vijay Sharma', 'Rekha Menon', 'Arun Kumar', 'Swathi Reddy', 'Ganesh Iyer',
+  'Pallavi Singh', 'Nikhil Das', 'Shreya Gupta', 'Rajesh Nair', 'Lavanya Babu',
+  'Harish Rajan', 'Sowmya Joshi', 'Praveen Krishnan', 'Usha Tiwari', 'Bala Patel',
+  'Geetha Sharma', 'Senthil Menon', 'Yamuna Kumar', 'Dinesh Reddy', 'Valli Iyer',
+  'Aditya Singh', 'Bhavana Das', 'Ravi Gupta', 'Saranya Nair', 'Mohan Babu',
+  'Chitra Rajan', 'Saravanan Joshi', 'Keerthi Krishnan', 'Venkat Tiwari', 'Malathi Patel',
+]
+
+const SALES_TEAM = [
+  { name: 'Rahul Sharma',   email: 'rahul@leads.com' },
+  { name: 'Priya Nair',     email: 'priya@leads.com' },
+  { name: 'Karthik Menon',  email: 'karthik@leads.com' },
+  { name: 'Divya Thomas',   email: 'divya@leads.com' },
+  { name: 'Vikram Singh',   email: 'vikram@leads.com' },
+  { name: 'Sneha Reddy',    email: 'sneha@leads.com' },
+  { name: 'Rohan Verma',    email: 'rohan@leads.com' },
+  { name: 'Ananya Das',     email: 'ananya@leads.com' },
+  { name: 'Suresh Babu',    email: 'suresh@leads.com' },
+  { name: 'Kavitha Rajan',  email: 'kavitha@leads.com' },
+]
+
+const STATUSES = ['new', 'contacted', 'qualified', 'lost'] as const
+const SOURCES  = ['website', 'instagram', 'referral'] as const
+
+const rand = <T>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)]
+
+const randomEmail = (name: string, i: number) =>
+  `${name.split(' ')[0].toLowerCase()}${i}@gmail.com`
+
+const randomDate = (daysBack: number) => {
+  const d = new Date()
+  d.setDate(d.getDate() - Math.floor(Math.random() * daysBack))
+  return d
+}
 
 const seed = async () => {
-  await mongoose.connect(process.env.MONGO_URI as string);
-  console.log('Connected for seeding...');
+  await mongoose.connect(process.env.MONGO_URI as string)
+  console.log('Connected...')
 
-  // Clear existing
-  await User.deleteMany({});
-  await Lead.deleteMany({});
+  await User.deleteMany({})
+  await Lead.deleteMany({})
 
-  // Create users
-  const hashedPassword = await bcrypt.hash('password123', 12);
+  const hashed = await bcrypt.hash('password123', 12)
 
+  // Admin
   const admin = await User.create({
     name: 'Admin User',
     email: 'admin@leads.com',
-    password: hashedPassword,
+    password: hashed,
     role: 'admin',
-  });
+  })
 
-  const sales1 = await User.create({
-    name: 'Rahul Sharma',
-    email: 'rahul@leads.com',
-    password: hashedPassword,
-    role: 'sales',
-  });
+  // 10 Sales users
+  const salesUsers = await User.insertMany(
+    SALES_TEAM.map(u => ({
+      name: u.name,
+      email: u.email,
+      password: hashed,
+      role: 'sales',
+    }))
+  )
 
-  const sales2 = await User.create({
-    name: 'Priya Nair',
-    email: 'priya@leads.com',
-    password: hashedPassword,
-    role: 'sales',
-  });
+  // 50 Leads
+  const leads = NAMES.map((name, i) => ({
+    name,
+    email: randomEmail(name, i),
+    phone: `98765${String(43210 + i).padStart(5, '0')}`,
+    status: rand(STATUSES),
+    source: rand(SOURCES),
+    notes: i % 3 === 0 ? 'Follow up scheduled' : i % 3 === 1 ? 'High priority client' : undefined,
+    assignedTo: salesUsers[i % salesUsers.length]._id,
+    createdBy: i % 5 === 0 ? admin._id : salesUsers[i % salesUsers.length]._id,
+    createdAt: randomDate(90),
+  }))
 
-  // Sample leads
-  const leads = [
-    { name: 'Arjun Kumar',     email: 'arjun@gmail.com',  assignedTo: sales1._id, phone: '9876543210', status: 'new',       source: 'website',   createdBy: sales1._id },
-    { name: 'Sneha Reddy',     email: 'sneha@gmail.com',  assignedTo: sales1._id, phone: '9876543211', status: 'contacted', source: 'instagram', createdBy: sales1._id },
-    { name: 'Vikram Singh',    email: 'vikram@gmail.com', assignedTo: sales1._id, phone: '9876543212', status: 'qualified', source: 'referral',  createdBy: sales2._id },
-    { name: 'Meera Pillai',    email: 'meera@gmail.com',  assignedTo: sales1._id, phone: '9876543213', status: 'lost',      source: 'website',   createdBy: sales2._id },
-    { name: 'Karthik Menon',   email: 'karthik@gmail.com',assignedTo: sales1._id, phone: '9876543214', status: 'new',       source: 'instagram', createdBy: admin._id },
-    { name: 'Divya Thomas',    email: 'divya@gmail.com',  assignedTo: sales2._id, phone: '9876543215', status: 'contacted', source: 'referral',  createdBy: sales1._id },
-    { name: 'Rohan Verma',     email: 'rohan@gmail.com',  assignedTo: sales2._id, phone: '9876543216', status: 'qualified', source: 'website',   createdBy: sales1._id },
-    { name: 'Ananya Das',      email: 'ananya@gmail.com', assignedTo: sales2._id, phone: '9876543217', status: 'new',       source: 'instagram', createdBy: sales2._id },
-    { name: 'Siddharth Rao',   email: 'sid@gmail.com',    assignedTo: sales2._id, phone: '9876543218', status: 'lost',      source: 'referral',  createdBy: admin._id },
-    { name: 'Lakshmi Iyer',    email: 'lakshmi@gmail.com',assignedTo: sales2._id, phone: '9876543219', status: 'new',       source: 'website',   createdBy: sales2._id },
-    { name: 'Rahul Gupta',     email: 'rgupta@gmail.com', assignedTo: sales2._id, phone: '9876543220', status: 'contacted', source: 'instagram', createdBy: sales1._id },
-    { name: 'Pooja Mehta',     email: 'pooja@gmail.com',  assignedTo: sales1._id, phone: '9876543221', status: 'qualified', source: 'website',   createdBy: sales2._id },
-  ];
+  await Lead.insertMany(leads)
 
-  await Lead.insertMany(leads);
+  console.log('✅ Seeded successfully!')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('Admin:   admin@leads.com / password123')
+  SALES_TEAM.forEach(u => console.log(`Sales:   ${u.email} / password123`))
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('Total leads: 50 | Sales users: 10')
 
-  console.log('✅ Seeded: 3 users, 12 leads');
-  console.log('Admin:   admin@leads.com / password123');
-  console.log('Sales 1: rahul@leads.com / password123');
-  console.log('Sales 2: priya@leads.com / password123');
+  await mongoose.disconnect()
+  process.exit(0)
+}
 
-  await mongoose.disconnect();
-  process.exit(0);
-};
-
-seed().catch((err) => {
-  console.error('Seed failed:', err);
-  process.exit(1);
-});
+seed().catch(err => {
+  console.error('Seed failed:', err)
+  process.exit(1)
+})
