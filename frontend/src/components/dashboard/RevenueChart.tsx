@@ -89,7 +89,10 @@ export function RevenueChart() {
               }}
               labelStyle={{ color: "#f0ede6", fontWeight: 600 }}
               itemStyle={{ color: "#9ca3af" }}
-              formatter={(value: number) => [`$${(value / 1000).toFixed(0)}k`, ""]}
+              formatter={(value) => {
+                const numericValue = typeof value === "number" ? value : Number(value) || 0;
+                return [`$${(numericValue / 1000).toFixed(0)}k`, "Revenue"];
+              }}
             />
             <Area
               type="monotone"
